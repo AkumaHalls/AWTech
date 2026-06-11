@@ -358,6 +358,7 @@ local state = {
     pendingReset = {},
     resetKnife   = false,
     resetGlove   = false,
+    lastGloveTeam    = 0,
     localModel       = nil,
     appliedLocalModel= nil,
 }
@@ -528,7 +529,7 @@ local function apply_gloves(base, pawn, gdef, paint, wear, seed)
         w_u8 (g + off.m_bInitialized, 1)
         w_u8 (pawn + off.m_bNeedToReApplyGloves, 1)
         if fnptr.set_body_group then
-            pcall(function() fnptr.set_body_group(ffi.cast("void*", pawn), "first_or_third_person", 1) end)
+            pcall(function() fnptr.set_body_group(ffi.cast("void*", pawn), "first_or_third_person", 2) end)
         end
         glove_apply = glove_apply - 1
     end
@@ -542,7 +543,7 @@ local function reset_gloves(pawn)
     w_u8 (pawn + off.m_bNeedToReApplyGloves, 1)
     glove_key, glove_apply = nil, 0
     if fnptr.set_body_group then
-        pcall(function() fnptr.set_body_group(ffi.cast("void*", pawn), "first_or_third_person", 1) end)
+        pcall(function() fnptr.set_body_group(ffi.cast("void*", pawn), "first_or_third_person", 2) end)
     end
 end
 
@@ -770,6 +771,12 @@ local function run()
     local applied = state.applied
 
     apply_local_model(pawn, lp)
+
+    local myTeam = r_u8(pawn + off.m_iTeamNum)
+    if state.lastGloveTeam ~= myTeam then
+        state.lastGloveTeam = myTeam
+        glove_key = nil
+    end
 
     if state.resetGlove then
         reset_gloves(pawn); state.resetGlove = false
