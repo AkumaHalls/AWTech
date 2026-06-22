@@ -438,6 +438,7 @@ local function process_weapon(wpn, paint, wear, seed, stat, statval)
     mark_item_custom(item_ptr(wpn))
     write_fallback(wpn, paint, wear, seed, stat, statval)
     apply_weapon_model(wpn)
+    if fnptr.update_subclass then fnptr.update_subclass(ffi.cast("void*", wpn)) end
     refresh_econ(wpn)
     vcall_void(wpn, 195)
 end
@@ -861,9 +862,6 @@ local function run()
                             w_f32(vmEntity + off.m_flFallbackWear, safe_wear(c.wear))
                             w_i32(vmEntity + off.m_nFallbackSeed, c.seed)
                             w_i32(vmEntity + off.m_nFallbackStatTrak, c.stat and (c.statval or 0) or -1)
-                            local vi = vmEntity + off.m_AttributeManager + off.m_Item
-                            w_u32(vi + off.m_iItemIDHigh, 0xFFFFFFFF)
-                            w_u32(vi + off.m_iItemIDLow, 0xFFFFFFFF)
                             if fnptr.set_mesh_mask then
                                 local node = r_ptr(vmEntity + off.m_pGameSceneNode)
                                 if valid(node) then fnptr.set_mesh_mask(ffi.cast("void*", node), 2) end
