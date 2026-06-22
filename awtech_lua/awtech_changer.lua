@@ -43,7 +43,8 @@ local FIELDS = {
     m_nFallbackStatTrak    = { "m_nFallbackStatTrak", "C_EconEntity" },
     m_EconGloves           = { "m_EconGloves", "C_CSPlayerPawn" },
     m_bNeedToReApplyGloves = { "m_bNeedToReApplyGloves", "C_CSPlayerPawn" },
-    m_hViewModel           = { "m_hViewModel", "C_CSPlayerPawn" },
+    m_pViewModelServices   = { "m_pViewModelServices", "C_CSPlayerPawnBase" },
+    m_hViewModel           = "m_hViewModel",
 }
 
 local function pull_offset(j, name, after)
@@ -846,25 +847,28 @@ local function run()
         end
     end
     -- sync viewmodel (first-person hand model)
-    if off.m_hViewModel then
-        local vmHnd = r_u32(pawn + off.m_hViewModel)
-        if vmHnd ~= 0 and vmHnd ~= 0xFFFFFFFF then
-            local vmEntity = handle_to_entity(elist, vmHnd)
-            if vmEntity then
-                local activeHnd = r_u32(ws + off.m_hActiveWeapon)
-                if activeHnd ~= 0 and activeHnd ~= 0xFFFFFFFF then
-                    local activeWpn = handle_to_entity(elist, activeHnd)
-                    if activeWpn then
-                        local def = r_u16(item_ptr(activeWpn) + off.m_iItemDefinitionIndex)
-                        local c = state.cfg[def]
-                        if c and c.paint > 0 then
-                            w_i32(vmEntity + off.m_nFallbackPaintKit, c.paint)
-                            w_f32(vmEntity + off.m_flFallbackWear, safe_wear(c.wear))
-                            w_i32(vmEntity + off.m_nFallbackSeed, c.seed)
-                            w_i32(vmEntity + off.m_nFallbackStatTrak, c.stat and (c.statval or 0) or -1)
-                            if fnptr.set_mesh_mask then
-                                local node = r_ptr(vmEntity + off.m_pGameSceneNode)
-                                if valid(node) then fnptr.set_mesh_mask(ffi.cast("void*", node), 2) end
+    if off.m_pViewModelServices and off.m_hViewModel then
+        local vmSvc = r_ptr(pawn + off.m_pViewModelServices)
+        if valid(vmSvc) then
+            local vmHnd = r_u32(vmSvc + off.m_hViewModel)
+            if vmHnd ~= 0 and vmHnd ~= 0xFFFFFFFF then
+                local vmEntity = handle_to_entity(elist, vmHnd)
+                if vmEntity then
+                    local activeHnd = r_u32(ws + off.m_hActiveWeapon)
+                    if activeHnd ~= 0 and activeHnd ~= 0xFFFFFFFF then
+                        local activeWpn = handle_to_entity(elist, activeHnd)
+                        if activeWpn then
+                            local def = r_u16(item_ptr(activeWpn) + off.m_iItemDefinitionIndex)
+                            local c = state.cfg[def]
+                            if c and c.paint > 0 then
+                                w_i32(vmEntity + off.m_nFallbackPaintKit, c.paint)
+                                w_f32(vmEntity + off.m_flFallbackWear, safe_wear(c.wear))
+                                w_i32(vmEntity + off.m_nFallbackSeed, c.seed)
+                                w_i32(vmEntity + off.m_nFallbackStatTrak, c.stat and (c.statval or 0) or -1)
+                                if fnptr.set_mesh_mask then
+                                    local node = r_ptr(vmEntity + off.m_pGameSceneNode)
+                                    if valid(node) then fnptr.set_mesh_mask(ffi.cast("void*", node), 2) end
+                                end
                             end
                         end
                     end
