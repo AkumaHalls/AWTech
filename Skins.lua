@@ -1,4 +1,4 @@
-local BASE = "https://raw.githubusercontent.com/AkumaHalls/AWTech/main/awtech_lua"
+local BASE = "https://raw.githubusercontent.com/AkumaHalls/AWTech/dev/awtech_lua"
 local CACHE = "./awtech_lua"
 
 local function load(name)

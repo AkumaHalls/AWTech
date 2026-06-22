@@ -383,6 +383,7 @@ end
 
 local function mark_item_custom(item)
     w_u32(item + off.m_iItemIDHigh, 0xFFFFFFFF)
+    w_u32(item + off.m_iItemIDLow, 0xFFFFFFFF)
     w_u8 (item + off.m_bInitialized, 1)
     w_u8 (item + off.m_bDisallowSOC, 0)
     w_u8 (item + off.m_bRestoreCustomMat, 1)
@@ -425,10 +426,19 @@ local function process_knife(wpn, def_target, paint, wear, seed, stat, statval)
     vcall_void(wpn, 195)
 end
 
+local function apply_weapon_model(wpn)
+    if fnptr.set_mesh_mask then
+        local node = r_ptr(wpn + off.m_pGameSceneNode)
+        if valid(node) then fnptr.set_mesh_mask(ffi.cast("void*", node), 2) end
+    end
+end
+
 local function process_weapon(wpn, paint, wear, seed, stat, statval)
     mark_item_custom(item_ptr(wpn))
     write_fallback(wpn, paint, wear, seed, stat, statval)
+    apply_weapon_model(wpn)
     refresh_econ(wpn)
+    vcall_void(wpn, 195)
 end
 
 local function restore_weapon(wpn)
